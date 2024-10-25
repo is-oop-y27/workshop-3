@@ -2,20 +2,25 @@
 using Articles;
 using Articles.Articles;
 using Articles.Drawer;
+using Articles.Expressions.Expressions;
+using Articles.Expressions.Renderables;
 using Articles.Modifiers;
 using Articles.Paragraphs;
 using Articles.Paragraphs.Builders;
 using Articles.Paragraphs.Factories;
 using Articles.Renderables;
+using Expressions;
+using Expressions.Expressions;
+using Expressions.Extensions;
 
 Console.Clear();
 
 IDrawer drawer = new ConsoleDrawer();
 
-IParagraphBuilderFactory factory = new StyledParagraphBuilderFactory(
-    new DimModifier());
+IParagraphBuilderFactory factory = new DefaultParagraphBuilderFactory();
 
 var article = CreateArticle(new ArticleBuilder(), factory);
+
 
 drawer.Draw(article);
 
@@ -26,7 +31,22 @@ static IArticle CreateArticle(
     builder.WithName(
         new Text("My article").AddModifier(new ColorModifier(Color.Pink)));
 
-    for (int i = 0; i < 5; i++)
+    IExpression expression = new VariableExpression("z")
+        .Multiply(
+            new StyledExpressionDecorator(
+                new VariableExpression("x").Add(new VariableExpression("y")),
+                new ColorModifier(Color.Green)));
+
+    ExpressionEvaluationContext context = ExpressionEvaluationContext.Build
+        .AddVariable("x", 2)
+        .Build();
+
+    builder.AddParagraph(paragraphFactory.Create()
+        .WithTitle(new Text("My Expression"))
+        .AddSection(new ExpressionRenderable(expression, context))
+        .Build());
+
+    for (int i = 0; i < 1; i++)
     {
         builder.AddParagraph(CreateParagraph(paragraphFactory));
     }
